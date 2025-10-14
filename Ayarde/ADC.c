@@ -2,7 +2,7 @@ void confADC(void) {
     LPC_SC->PCONP |= (1 << 12); // Habilito el periferico ADC (PCADC)
     LPC_ADC->ADCR |= (1 << 21); // ADC activado
     LPC_SC->PCLKSEL0 |= (3 << 24);// PCLK_ADC = CCLK/8 = 12.5MHz (frecuencia reloj a la que puede trabajar el ADC)
-    LPC_ADC->ADCR &= ~(255<<8); // ( bits [15:8] CLKDIV = 255 + 1 = 256 (para que el ADC trabaje a 48.8kHz, secuencia de trabajo final)
+    LPC_ADC->ADCR &= ~(255<<8); // ( bits [15:8] CLKDIV = 255 + 1 = 256 (secuencia de trabajo final)
     LPC_ADC->ADCR |= (1 << 16); // modo burst(si la frecuencia de muestreo es de 10khz si son 2 canales 5khz cada uno, como es 1 canal a 10khz)
     LPC_PINCON->PINMODE1 |= (1<<15)// P0.23 sin pull-up ni pull-down
     LPC_PINCON->PINSEL1 |= (1<<14);// P0.23 como funcion AD0.0
@@ -57,7 +57,7 @@ int main(void) {
     return 0;
 }
 void confPin(void){
-    PINSEL_CFG_Type PinCfg;
+    PINSEL_CFG_Type PinCfg;// 
     PinCfg.Funcnum =PINSEL_FUNC_1; // funcion 1 del pin
     PinCfg.OpenDrain = PINSEL_PINMODE_NORMAL; // sin open drain
     PinCfg.Pinmode = PINSEL_PINMODE_TRISTATE; // sin pull-up ni pull-down

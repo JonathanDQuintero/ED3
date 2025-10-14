@@ -51,7 +51,7 @@ int main(void){
     while(1);
     return 0;
 }
-void confPin(void){
+ void confPin(void){
     PINSEL_CFG_Type PinCfg;
     PinCfg.Funcnum = 2; // funcion 2 para el DAC
     PinCfg.OpenDrain = 0; // no es open drain
@@ -104,36 +104,170 @@ void confDac(void){
     DAC_ConfigDAConverterControl(LPC_DAC, &DAC_ConverteConfigStruct);
     return;
 }
+/*ejemplo de configuracion de DMA para que mande datos 
+de memoria a memoria
+* ese codigo genera por datos obtenidos del adc 2 arrays de 10bits los cuales no puede ser mayor 1034 elemetos, los cuales el valor de estos 
+son utilizados para decir desde que posicion se intercambian 100 elementos(posiciones) de table
+*
+*
+*
+*/
+#include "LPC17xx.h"
+#include "lpc17xx_gpdma.h" 
+#include "lpc17xx_pinsel.h"
+#include "lpc17xx_adc.h"
 
+#define DMA_SWAP_SIZE 100 // cantidad de datos a transferir
+#define TABLE_LEN 1034 // cantidad de datos en la tabla
 
+void confDMA(void);
+void confADC(void);//prototipo de la funcion de configuracion de interrupciones externas
 
+GPDMA_Channel_CFG_Type GPDMACfg;//estructura de configuracion del canal DMA
 
+uint32_t table[TABLE_LEN];//tabla de datos origen
+uint32_t random[2];//tabla de datos destino
 
+uint32_t aux_buffer[DMA_SWAP_SIZE];//buffer auxiliar para hacer la transferencia de datos
 
+GPDMA_LLI_Type DMA_LLI_Struct1;//estructura de la primera lista de transferencia
+GPDMA_LLI_Type DMA_LLI_Struct2;//estructura de la segunda lista de transferencia
+GPDMA_LLI_Type DMA_LLI_Struct3;//estructura de la tercera lista de transferencia
 
+uint32_t bitcount;//contador de bits transferidos
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*confirguracion de DMA con drivers*/
-int main(){
-    confDMA();
-     // habilito el canal 0
-    GPDMA_ChannelCmd(0, ENABLE);//Comienza la transferencia de informacion
+int main(void){
+    uint32_t i;
+    //les doy un valor inicial random para que no este con cualquier valor y pueda llegar a alterar el codigo
+    random[0]=545;//tabla de datos destino
+    random[1]=433;//tabla de datos destino
+    bitcount=0;//inicializo el contador de bits transferidos
+    //preparacion de la tabla de datos origen
+    for(i=0;i<TABLE_LEN;i++){
+        table[i]=i;//cargo la tabla de datos origen
+    }
+    confADC();//configuro las interrupciones externas
     while(1);
     return 0;
 }
+void confDMA(void) {
+    // configuracion de la primera estructura LLI
+    DMA_LLI_Struct1.SrcAddr = (uint32_t)table+4*random[0];//direccion de la fuente de datos (puntero hacia la direccion de memoria)
+    DMA_LLI_Struct1.DstAddr = (uint32_t)aux_buffer;//direccion de destino (puntero hacia la direccion de memoria)
+    DMA_LLI_Struct1.NextLLI = (uint32_t)&DMA_LLI_Struct2;//direccion de la siguiente estructura LLI
+    DMA_LLI_Struct1.Control = DMA_SWAP_SIZE    
+                            | (2 << 18)//ancho de burst de la fuente 32 bits 
+                            | (2 << 21)//ancho de burst del destino 32 bits
+                            | (1 << 26)//incremento de la fuente
+                            | (1 << 27)//incremento del destino
+                            ;
+    // configuracion de la segunda estructura LLI
+    DMA_LLI_Struct2.SrcAddr = (uint32_t)table+4*random[1];//direccion de la fuente de datos (puntero hacia la direccion de memoria)
+    DMA_LLI_Struct2.DstAddr = (uint32_t)table+4*random[0];//direccion de destino (puntero hacia la direccion de memoria)
+    DMA_LLI_Struct2.NextLLI = (uint32_t)&DMA_LLI_Struct3;//direccion de la siguiente estructura LLI
+    DMA_LLI_Struct2.Control = DMA_SWAP_SIZE    
+                            | (2 << 18)//ancho de burst de la fuente 32 bits 
+                            | (2 << 21)//ancho de burst del destino 32 bits
+                            | (1 << 26)//incremento de la fuente
+                            | (1 << 27)//incremento del destino
+                            ;
+    // configuracion de la tercera estructura LLI
+    DMA_LLI_Struct3.SrcAddr = (uint32_t)aux_buffer;//direccion de la fuente de datos (puntero hacia la direccion de memoria)
+    DMA_LLI_Struct3.DstAddr = (uint32_t)table+4*random[1];//direccion de destino (puntero hacia la direccion de memoria)
+    DMA_LLI_STRUCT3.NEXTLLI=0;//ultima transferencia no apunta a ninguna otra
+    DMA_LLI_Struct3.Control = DMA_SWAP_SIZE    
+                            | (2 << 18)//ancho de burst de la fuente 32 bits 
+                            | (2 << 21)//ancho de burst del destino 32 bits
+                            | (1 << 26)//incremento de la fuente
+                            | (1 << 27)//incremento del destino
+                            ;
+    //GPDMA SECCION BLOQUE
+    //inicializacion del GPDMA
+    GPDMA_Init();
+    //Configuracion del canal GPDMA
+    //canal 7
+    GPDMACfg.ChannelNum = 7; // canal 7
+    //memoria fuente
+    GPDMACfg.SrcMemAddr = DMA_LLI_STRUCT1.SrcAddr; // direccion de la fuente de datos (puntero hacia la direccion de memoria)
+    //memoria destino
+    GPDMACfg.DstMemAddr = DMA_LLI_STRUCT1.DstAddr; // direccion de destino (puntero hacia la direccion de memoria)
+    //cantidad de datos a transferir
+    GPDMACfg.TransferSize = DMA_SWAP_SIZE; // cantidad de datos a transferir(cuantas posiciones de memoria se van a transferir)
+    //ancho de los datos a transferir (0=8bits,1=16bits,2=32bits)
+    GPDMACfg.TransferWidth = GPDMA_WIDTH_WORD;// ancho de los datos a transferir (0=8bits,1=16bits,2=32bits)
+    //tipo de transferencia (memoria a memoria)
+    GPDMACfg.TransferType = GPDMA_TRANSFERTYPE_M2M; // tipo de transferencia (memoria a memoria)
+    //funete de conexion (no se usa porque la fuente es memoria)
+    GPDMACfg.SrcConn = 0; // no se usa porque la fuente es memoria
+    //destino de conexion (no se usa porque el destino es memoria)
+    GPDMACfg.DstConn = 0; // no se usa porque el destino es memoria
+    //LINKED LIST ITEM (no se usa porque no armamos varias listas entonces recorremos siempre la misma lista)
+    GPDMACfg.DMALLI=(uint32_t)&DMA_LLI_STRUCT2; // puntero a la estructura LLI(esto por que no armamos varias listas entonces recorremos siempre la misma lista)
+    // configuracion del canal con parametros dados
+    GPDMA_Setup(&GPDMACfg); // configuracion del canal
+    return;
+}
+void confADC(void){
+    ADC_Init(LPC_ADC, 200000); // inicializo el ADC a 200kHz
+    LPC_SC->PCONP |= (1 << 12); // Habilito el periferico ADC (PCADC)
+    LPC_ADC->ADCR |= (1 << 21); // ADC activado
+    LPC_SC->PCLKSEL0 |= (3 << 24);// PCLK_ADC = CCLK/8 = 12.5MHz (frecuencia reloj a la que puede trabajar el ADC)
+    LPC_ADC->ADCR &= ~(255<<8); // ( bits [15:8] CLKDIV = 255 + 1 = 256 (secuencia de trabajo final)
+    LPC_ADC->ADCR |= (1 << 16); // modo burst(si la frecuencia de muestreo es de 10khz si son 2 canales 5khz cada uno, como es 1 canal a 10khz)
+    LPC_PINCON->PINMODE1 |= (1<<15);// P0.23 sin pull-up ni pull-down
+    LPC_PINCON->PINSEL1 |= (1<<14);// P0.23 como funcion AD0.0
+    LPC_ADC->ADINTEN = 1; // habilito la interrupcion por cada conversion
+    NVIC_SetPriority(ADC_IRQn,3);//prioridad 3
+    NVIC_EnableIRQ(ADC_IRQn); // habilito las interrupciones del ADC
+    return;
+}
+void ADC_IRQHandler(void){
+    stactic uint16_t ADC_Value=0;//variable estatica para que mantenga su valor entre interrupciones
+    ADC_Value = ((LPC_ADC->ADDR0)>>4) & 0x001;// variable auxiliar para observar el valor convertido (hacemos una mascara para quedarnos con los bits [15:4] RESULT y no usar las otras funciones del ADC)
+   //0x001 es una mascara para quedarnos con los 2bits menos significativos que sirven para elegir la posicion de memoria de la tabla
+   if(bitcount<10){
+        if(bitcount==0){
+            random[0]=0;//inicializo la primer posicion de memoria
+            }
+            random[0]=(random[0]<<1)|ADC_Value;//carga el valor de la comparacion entre el valor de ADC_Value y random[0]
+            bitcount++;
+        
+   }else{
+        if(bitcount==10){
+                random[1]=0;
+        }
+        random[1]=(random[1]<<1)|ADC_Value;
+        bitcount++;
+        if(bitcount==20){
+            bitcount=0;
+            random[1]=random[1]%1024;
+            random[0]=random[0]%1024;
+            NVIC_DisableIRQ(DMA_IRQn);
+            confDMA();
+            //habilitacion de GPDMA canal 5
+            GPDMA_ChannelCmd(7,ENABLE);
+
+        }
+   }
+   return;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
