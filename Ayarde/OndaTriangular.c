@@ -17,23 +17,19 @@ void confWave(void){
 //Generacion forma de onda triangular(full wave)
 for(uint16_t i=0; i<NUM_WAVE_SAMPLES; i++){
     //Primer Cuadrante
-    if(i<(1*(NUM_WAVE_SAMPLES/4))){
-        WaveFormInit[i]=512+512*WaveFormInit [i]/NUM_WAVE_SAMPLES;
+    if(i<(NUM_WAVE_SAMPLES/4)){
+        WaveFormInit[i]=512+(512*i)/(NUM_WAVE_SAMPLES/4);
     }
-    if(i==(1*(NUM_WAVE_SAMPLES/4))){
-        WaveFormInit[i]=1023;//para asegurar que el valor maximo sea 1023
-    }
-    //Segundo Cuadrante
-    if(i<(2*(NUM_WAVE_SAMPLES/4))){
-        WaveFormInit[i]=512+512*WaveFormInit[(NUM_WAVE_SAMPLES/4)-i]/NUM_WAVE_SAMPLES;
+    if(i<(NUM_WAVE_SAMPLES/2)){
+        WaveFormInit[i]=1023-512*(i-(NUM_WAVE_SAMPLES/4))/(NUM_WAVE_SAMPLES/4);
         }
     //Tercer Cuadrante
     if(i<(3*(NUM_WAVE_SAMPLES/4))){
-        WaveFormInit[i]=512-512*WaveFormInit[i-((NUM_WAVE_SAMPLES/4))]/NUM_WAVE_SAMPLES;
+        WaveFormInit[i]=512-512*(i-((NUM_WAVE_SAMPLES/2)))/(NUM_WAVE_SAMPLES/4);
     }
     //Cuarto Cuadrante
     if(i<(4*(NUM_WAVE_SAMPLES/4))){
-        WaveFormInit[i]=512-512*WaveFormInit[(NUM_WAVE_SAMPLES)-i]/NUM_WAVE_SAMPLES;
+        WaveFormInit[i]=(512*(i-(3*(NUM_WAVE_SAMPLES/4)))/(NUM_WAVE_SAMPLES/4));
     }
     WaveFormInit[i]=WaveFormInit[i]<<6;//corrimiento para que quede en el lugar correcto del registro del DAC
 }
