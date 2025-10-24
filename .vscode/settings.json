@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "lpc17xx_adc.h": "c",
+        "EJ1-RECUPERATORIO.C": "cpp"
+    }
+}

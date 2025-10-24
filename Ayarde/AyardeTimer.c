@@ -6,7 +6,7 @@ void confTimer(void) {
 
     // Set PCLK for Timer0 to CCLK
     LPC_SC->PCLKSEL0    |= (1 << 2);// indica el reloj que va a llegar al periferico PLCK=CCLK
-    LPC_PINCON->PINSEL3 |= (1 << 24); // P0.25 como funcion de Timer0 
+    LPC_PINCON->PINSEL3 |= (3 <<24); // P1.28 como funcion de Timer0 el MAT0.0
     
     LPC_TIM0->EMR       |= (3 << 4); // match genera una señal externa toggle en match0
     LPC_TIM0->MR0 = 70000000; // Seteo el match valuado en 0.7seg a 100MHz=PCLK // T=(1/PCLK)*(PR+1)*(MR0+1)=0.7seg; PCLK=CCLK=100MHz, PR=0, MR0=70M
@@ -20,7 +20,7 @@ void confTimer(void) {
     LPC_TIM0->TCR       &=~(1<<1);// quitar el reset
     // Enable Timer0 interrupt
     NVIC_EnableIRQ(TIMER0_IRQn);
-
+ 
 
 }
 
@@ -161,6 +161,7 @@ void TIMER0_IRQHandler(void) {
     return;
    
 }
+} 
 /*nuevo ejercicio
 
 
@@ -213,7 +214,7 @@ void confTimer(void) {
 
     // Set PCLK for Timer0 to CCLK
     LPC_SC->PCLKSEL0    |= (1 << 2);// indica el reloj que va a llegar al periferico PLCK=CCLK
-    //LPC_PINCON->PINSEL3 |= (1 << 24); // P0.25 como funcion de Timer0  (no la voy sacar por eso la dejo comentada)
+    //LPC_PINCON->PINSEL3 |= (1 << 24); // P0.25 como funcion de Timer0  (no la voy  sacar al valor en la salida de un pin por eso la dejo comentada)
     
     LPC_TIM0->EMR       |= (3 << 6); // match1 genera una señal externa toggle en match1
     LPC_TIM0->MR1 = 100000000; // Seteo el match valuado en 1seg a 100MHz=PCLK // T=(1/PCLK)*(PR+1)*(MR0+1)=1seg; PCLK=CCLK=100MHz, PR=0, MR1=100M

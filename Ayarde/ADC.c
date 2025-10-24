@@ -2,11 +2,11 @@ void confADC(void) {
     LPC_SC->PCONP |= (1 << 12); // Habilito el periferico ADC (PCADC)
     LPC_ADC->ADCR |= (1 << 21); // ADC activado
     LPC_SC->PCLKSEL0 |= (3 << 24);// PCLK_ADC = CCLK/8 = 12.5MHz (frecuencia reloj a la que puede trabajar el ADC)
-    LPC_ADC->ADCR &= ~(255<<8); // ( bits [15:8] CLKDIV = 255 + 1 = 256 (secuencia de trabajo final)
+    LPC_ADC->ADCR &= ~(255<<8); // ( bits [15:8] CLKDIV = 255 + 1 = 256 (secuencia de trabajo final))
     LPC_ADC->ADCR |= (1 << 16); // modo burst(si la frecuencia de muestreo es de 10khz si son 2 canales 5khz cada uno, como es 1 canal a 10khz)
     LPC_PINCON->PINMODE1 |= (1<<15)// P0.23 sin pull-up ni pull-down
     LPC_PINCON->PINSEL1 |= (1<<14);// P0.23 como funcion AD0.0
-    LPC_ADC->ADINTEN |= 1; // habilito la interrupcion por cada conversion
+    LPC_ADC->ADINTEN |= 1; // habilito del channel 0 la interrupcion por cada conversion
     LPC_ADC->ADINTEN &= ~(1<<8); // para el modo burst tiene que estar en 0 el bit 8 (interrupcion por secuencia de canales) por que como resetea en 1 solo lee a el global
     NVIC_EnableIRQ(ADC_IRQn); // habilito las interrupciones del ADC
     return;
@@ -27,6 +27,13 @@ el dato digitalizado sino que vamos a hacer una retardo por software para que ap
 tiempo tome el valor del ADC y lo guarde en una variable global
 
 */
+#ifdef __USE_CMSIS
+#include "LPC17xx.h"
+#endif
+
+#ifdef __USE_MCUEXPRESSO
+#include <cr_section_macros.h> /* The cr_section_macros is specific to the MCUXpresso delivered toolchain */
+#endif
 #include "LPC17xx.h"
 #include "LPC17xx_adc.h"
 #include "LPC17xx_pinsel.h"
@@ -71,7 +78,7 @@ void confPin(void){
 void configADC(void) {
     ADC_Init(LPC_ADC, 200000); // inicializo el ADC a 200kHz
     ADC_IntConfig(LPC_ADC, _ADC_INT, ENABLE); // habilito la interrupcion por cada conversion
-    ADC_ChannelCmd(LPC_ADC, _ADC_CHANNEL, ENABLE); // habilito el canal 2 del ADC
+    ADC_ChannelCmd(LPC_ADC, _ADC_CHANNEL, ENABLE); // habilito el canal 2 del ADC 
 
     NVIC_Setpriority(ADC_IRQn, (9)); // seteo la prioridad de la interrupcion del ADC como 9
     return;
