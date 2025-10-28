@@ -88,7 +88,7 @@ void confDMA(void) {
     GPDMACfg.DMALLI = (uint32_t)&DMA_LLI_Struct; // puntero a la estructura LLI( esto por que no armamos varias listas entonces recorremos siempre la misma lista)
     GPDMA_Setup(&GPDMACfg); // configuracion del canal
     return;
-}
+}  
 void confDac(void){
     uint32_t tmp;
     DAC_CONVERTER_CFG_Type DAC_ConverteConfigStruct;//inicializacion del dac junto con el DMA

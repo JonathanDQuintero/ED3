@@ -102,18 +102,7 @@ void config_GPIO(void) {
     GPIO_SetDir(PORT_ZERO, PIN_22, OUTPUT); // P0.22 como salida
     return;
 }
-void config_timer(void) {
-    TIM_TIMERCFG_Type struct_config;
-    TIM_MATCHCFG_Type struct_match;
 
-    struct_config.PrescaleOption = TIM_PRESCALE_USVAL; // valor del prescaler en microsegundos
-    struct_config.PrescaleValue  = 100; // cada 100us se incrementa el timer
-
-
-    // Enable Timer0 interrupt
-    NVIC_EnableIRQ(TIMER0_IRQn);
-    return;
-}
 void GPIO_SetDir(uint8_t portNum, uint32_t bitValue, uint8_t dir) {
     LPC_GPIO_TypeDef *pGPIO = GPIO_GetPointer(portNum);
     if (pGPIO != NULL) {

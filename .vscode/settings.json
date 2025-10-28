@@ -1,6 +1,9 @@
 {
     "files.associations": {
         "lpc17xx_adc.h": "c",
-        "EJ1-RECUPERATORIO.C": "cpp"
+        "EJ1-RECUPERATORIO.C": "cpp",
+        "EJ2-PARCIAL2.C": "cpp",
+        "EJ2-PARCIAL1.C": "cpp",
+        "ejercicio1": "c"
     }
 }
