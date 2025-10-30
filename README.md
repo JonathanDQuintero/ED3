@@ -6,3 +6,5 @@ repositorio de nico pinera https://github.com/nicopinera/EDIII/tree/main
 repositorio fabio britez https://github.com/fabiobritez/digital_electronicsIII/tree/main
 
 consignas para practicar 2d0 parcial https://bow-bike-fd5.notion.site/Segundo-parcial-Pr-ctico-12325f3f13c680d6b196eedd68c7e021
+
+clases grabadas https://www.youtube.com/watch?v=cE8HVPKIB54&list=PLWAL4eqHMohrpkKiTDIBsG6TPI70OFgrb&index=20
